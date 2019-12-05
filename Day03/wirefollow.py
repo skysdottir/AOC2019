@@ -3,18 +3,22 @@ def manhattan(x, y):
 
 def closest_intersection(vect, candidates):
     closest = 999999
-    u, v_a, v_b = vect
+    u, v_a, v_b, vect_t = vect
     v_min = min(v_a, v_b)
     v_max = max(v_a, v_b)
 
     for cand in candidates:
-        c_v, c_u_a, c_u_b = cand
+        c_v, c_u_a, c_u_b, cand_t = cand
         c_u_min = min(c_u_a, c_u_b)
         c_u_max = max(c_u_a, c_u_b)
 
         if (v_min <= c_v <= v_max and c_u_min <= u <= c_u_max and (manhattan(c_v, u) > 0)):
             print("found intersection at (u,v) (%i, %i)" % (u, c_v))
-            closest = min(closest, manhattan(c_v, u))
+
+            # brace yourself - that is to say, the distance to each start point (the 'a' points),
+            # plus the distance down each edge here from the start point to the intersection.
+            total_dist = vect_t + abs(v_a - c_v) + cand_t + abs(c_u_a - u)
+            closest = min(closest, total_dist)
     
     return closest
 
@@ -27,7 +31,7 @@ with open("Day03/input.txt", "r") as input:
 
     first = input.readline().split(",")
 
-    x = y = 0
+    x = y = traveled = 0
 
     for move in first:
         dir = move[0]
@@ -38,12 +42,14 @@ with open("Day03/input.txt", "r") as input:
         
         if ((dir == "U") | (dir == "D")):
             # It's a column!
-            cols.append((x, y, y+dist))
+            cols.append((x, y, y+dist, traveled))
             y += dist
         elif ((dir == "L") | (dir == "R")):
             # It's a row!
-            rows.append((y, x, x+dist))
+            rows.append((y, x, x+dist, traveled))
             x += dist
+        
+        traveled += (abs(dist))
 
     print("rows: " + str(rows))
     print("cols: " + str(cols))
@@ -51,7 +57,7 @@ with open("Day03/input.txt", "r") as input:
     second = input.readline().split(",")
 
     # housekeeping's going to look really familiar, here
-    x = y = 0
+    x = y = traveled = 0
     closest = 999999
 
     for move in second:
@@ -64,12 +70,14 @@ with open("Day03/input.txt", "r") as input:
         if ((dir == "U") | (dir == "D")):
             # It's a column!
             print("looking for row intersection with (%i, %i, %i)" % (x, y, y+dist))
-            closest = min(closest, closest_intersection((x, y, y+dist), rows))
+            closest = min(closest, closest_intersection((x, y, y+dist, traveled), rows))
             y += dist
         elif ((dir == "L") | (dir == "R")):
             # It's a row!
             print("looking for column intersection with (%i, %i, %i)" % (y, x, x+dist))
-            closest = min(closest, closest_intersection((y, x, x+dist), cols))
+            closest = min(closest, closest_intersection((y, x, x+dist, traveled), cols))
             x += dist
+        
+        traveled += (abs(dist))
 
     print("And if that worked, the closest intersection is at distance %i" % closest)
